@@ -1,0 +1,40 @@
+---
+
+# Simple command to test this:  ansible-playbook -i a,b,c ordering.yml
+
+- hosts: all
+  gather_facts: false
+
+  pre_tasks:
+    - name: pre1
+      command: ls
+      changed_when: true
+      delegate_to: localhost
+      notify: pre_handle
+
+  tasks:
+    - name: task1
+      command: ls .
+      changed_when: true
+      delegate_to: localhost
+      notify: handle_complex
+
+  handlers:
+
+    - name: pre_handle
+      command: ls blah_blah_thing_that_does_not_exist
+      delegate_to: localhost
+      failed_when: false  # Everything fails if this is commented out
+
+    - name: handle_complex
+      debug: msg="handle_complex for {{inventory_hostname}}"
+      changed_when: true
+      notify: 
+        - handle1
+        - handle2
+
+    - name: handle1
+      debug: msg="handle1"
+
+    - name: handle2
+      debug: msg="handle2"
