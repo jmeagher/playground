@@ -1,6 +1,7 @@
 ---
 
 # Simple command to test this:  ansible-playbook -i a,b,c ordering.yml
+# Weird note, running with one "host" requires a comma after it. Leaving it off gives a weird "only localhost available" error:  ansible-playbook -i a, ordering.yml
 
 - hosts: all
   gather_facts: false
