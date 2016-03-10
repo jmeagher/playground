@@ -1,0 +1,13 @@
+
+
+- name: dynamic check
+  changed_when: false
+  stat: path="{{item}}"
+  register: st
+
+- name: dynamic set
+  when: st.stat.exists == False
+  changed_when: true
+  set_fact: 
+    the_action: "{{action}}"
+  # notify: echo_handle

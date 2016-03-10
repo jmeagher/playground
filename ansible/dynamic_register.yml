@@ -1,0 +1,4 @@
+
+- name: dynamic register
+  delegate_to: localhost
+  set_fact: "{{to_register}}"=blah
