@@ -18,9 +18,36 @@
       command: ls .
       changed_when: true
       delegate_to: localhost
-      notify: handle_complex
+      # notify: handle_complex
+
+    - include: dynamic_check.yml item=dynamic_check.yml action=echo_handle
+      delegate_to: localhost
+      with_items:
+        - dynamic_check.yml
+        - ordering.yml
+        - blah_blah
+          # - foo_bar
+
+    - name: extra debug test
+      when: the_action is defined and the_action == "echo_handle"
+      debug: msg="{{the_action}}"
+
+    - name: var test
+      set_fact:
+        upgrade_needed: "{{the_action is defined and the_action == 'echo_handle'}}"
+
+    - name: extra debug test 2
+      debug: msg="upgrade needed? {{upgrade_needed}}"
+
+
+  post_tasks:
+    - name: post task debug
+      debug: msg="I am from post task"
 
   handlers:
+    - name: echo_handle
+      delegate_to: localhost
+      debug: msg="echo handle {{the_action}}"
 
     - name: pre_handle
       command: ls blah_blah_thing_that_does_not_exist
