@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: es-test-kibana
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: es-test-kibana
+    spec:
+      containers:
+      - name: es-test-kibana
+        image: "docker.elastic.co/kibana/kibana:5.6.1"
+        imagePullPolicy: "IfNotPresent"
+        command: ["/usr/share/kibana/bin/kibana"]
+        args: ["-e", "http://es-test-helm-elasticsearch:9200", "-l", "/tmp/kibana.log", "--verbose"]
+        ports:
+        - containerPort: 5601
+          name: http
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 90
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 10

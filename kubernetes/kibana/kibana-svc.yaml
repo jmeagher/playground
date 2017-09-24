@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: es-test-kibana-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: es-test-kibana
+  ports:
+  - protocol: TCP
+    port: 25601
+    targetPort: 5601
