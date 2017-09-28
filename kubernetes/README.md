@@ -55,7 +55,7 @@ $ kubectl describe nodes | grep instance-type
 
 [Helm](https://github.com/kubernetes/helm) is used here to deploy all the nodes of the ElasticSearch cluster. See their instructions for installing Helm. Once installed run `helm init` to get everything setup.
 
-The Helm Chart configuration to run the ElasticSearch cluster is in the helm-elasticsearch folder. The values.yaml file controls the details about what gets installed and run. Take a look at the values.yaml file. This configuration will start 1 master node, 1 client node, and 2 data nodes. This is a branch from the original [ElasticSearch for Helm configuration](https://github.com/clockworksoul/helm-elasticsearch). This makes a few configuration changes and removes Curator since the alpha features it is using are not available by default in the GCE Kubernetes. Additional changes were needed to get it working with the x-pack plugin from Elastic. 
+The Helm Chart configuration to run the ElasticSearch cluster is in the helm-elasticsearch folder. The values.yaml file controls the details about what gets installed and run. Take a look at the values.yaml file. This configuration will start 1 master node, 1 client node, and 2 data nodes. This is a branch from the original [ElasticSearch for Helm configuration](https://github.com/clockworksoul/helm-elasticsearch). This makes a few configuration changes and removes Curator since the alpha features it is using are not available by default in the GCE Kubernetes. Additional changes were needed to get it working with the x-pack plugin from Elastic.
 
 To start the ElasticSearch cluster run `$ helm install helm-elasticsearch --name es-test`. These should run within a short time. Confirm everything is started with
 
@@ -83,4 +83,4 @@ From inside the cluster the REST API for ElasticSearch will be accessible with t
 
 Start the Elastic provided version of Kibana with `kubectl create -f kibana/kibana.yaml`. The kibana/kibana.yaml Kubernetes configuration will connect to the ElasticSearch cluster launched above. The login is the default from ElasticSearch (elastic/changeme).
 
-To access this instance from outside the cluster an external service can be used. `kubectl create -f kibana/kibana-svc.yaml` will create an endpoint that is accessible from outside the cluster on port 25601. Use caution with leaving this up and running as anyone who stumbles upon this address will have access to your ElasticSearch cluster. Do not leave this running for a long time. To remove it use `kubectl delete service es-test-kibana-svc`.
+To access this instance from outside the cluster a port-forward can be used. `kubectl port-forward $(kubectl get pods | grep es-test-kibana | awk '{print $1}') 5601 5601` will create a local redirect to Kibana. Open that via http://localhost:5601/. 
