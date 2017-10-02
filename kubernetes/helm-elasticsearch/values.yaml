@@ -14,7 +14,7 @@ common:
 # sense to have dedicated ingest nodes, that will only perform this specific task.
 client:
   # It isn't common to need more than 2 client nodes.
-  replicas: 1
+  replicas: 2
   antiAffinity: "soft"
   env:
     NODE_DATA: "false"
@@ -32,7 +32,7 @@ client:
 # master and data roles.
 data:
   # This count will depend on your data and computation needs.
-  replicas: 2
+  replicas: 4
   antiAffinity: "soft"
   env:
     NODE_DATA: "true"
@@ -47,7 +47,7 @@ data:
 # important for cluster health to have a stable master node.
 master:
   # Master replica count should be (#clients / 2) + 1, and generally at least 3.
-  replicas: 1
+  replicas: 3
   antiAffinity: "soft"
   env:
     NODE_DATA: "false"
@@ -59,7 +59,7 @@ master:
     # The default value for this environment variable is 2, meaning a cluster
     # will need a minimum of 2 master nodes to operate. If you have 3 masters
     # and one dies, the cluster still works.
-    NUMBER_OF_MASTERS: "1"
+    NUMBER_OF_MASTERS: "2"
 
 service:
   type: ClusterIP

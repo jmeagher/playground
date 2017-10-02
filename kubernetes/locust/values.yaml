@@ -1,0 +1,37 @@
+Name: locust
+
+image:
+  repository: jpmeagher/playground
+  tag: docker-locust-0.7.5
+  pullPolicy: IfNotPresent
+
+service:
+  name: master-web
+  type: ClusterIP
+  externalPort: 8089
+  internalPort: 8089
+  nodePort: 0
+master:
+  config:
+    target-host: http://elastic:changeme@es-test-helm-elasticsearch:9200
+    corpus-glob: /corpus/*/*.txt
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+worker:
+  config:
+
+    # all files from tasks folder are mounted under `/locust-tasks`
+    locust-script: "/locust-tasks/tasks.py"
+  replicaCount: 2
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi

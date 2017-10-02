@@ -51,7 +51,7 @@ $ kubectl describe nodes | grep instance-type
 
 ```
 
-## Run ElasticSearch
+### Run ElasticSearch
 
 [Helm](https://github.com/kubernetes/helm) is used here to deploy all the nodes of the ElasticSearch cluster. See their instructions for installing Helm. Once installed run `helm init` to get everything setup.
 
@@ -79,8 +79,12 @@ $ curl es-test-helm-elasticsearch:9200/_cat/health
 
 From inside the cluster the REST API for ElasticSearch will be accessible with the service name and port 9200.
 
-## Run Kibana
+### Run Kibana
 
 Start the Elastic provided version of Kibana with `kubectl create -f kibana/kibana.yaml`. The kibana/kibana.yaml Kubernetes configuration will connect to the ElasticSearch cluster launched above. The login is the default from ElasticSearch (elastic/changeme).
 
-To access this instance from outside the cluster a port-forward can be used. `kubectl port-forward $(kubectl get pods | grep es-test-kibana | awk '{print $1}') 5601 5601` will create a local redirect to Kibana. Open that via http://localhost:5601/. 
+To access this instance from outside the cluster a port-forward can be used. `kubectl port-forward $(kubectl get pods | grep es-test-kibana | awk '{print $1}') 5601 5601` will create a local redirect to Kibana. Open that via http://localhost:5601/.
+
+### Run Locust
+
+Start the basic Locust test that is included with `helm install -n locust-es-test locust`. Connect to this with `kubectl port-forward $(kubectl get pods | grep locust-es-test-master | awk '{print $1}') 8089 8089`
