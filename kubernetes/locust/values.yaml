@@ -27,7 +27,7 @@ worker:
 
     # all files from tasks folder are mounted under `/locust-tasks`
     locust-script: "/locust-tasks/tasks.py"
-  replicaCount: 2
+  replicaCount: 6
   resources:
     limits:
       cpu: 100m

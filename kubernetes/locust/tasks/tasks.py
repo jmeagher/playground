@@ -36,9 +36,9 @@ class MixedElasticSearchLoad(TaskSet):
 
     @task(1000)
     def high_cardinality_insert(self):
-        self._do_insert(random.randint(0,1000000), "high_cardinality_insert")
+        self._do_insert(random.randint(0,10000000), "high_cardinality_insert")
 
-    @task(10)
+    @task(100)
     def simple_search(self):
         self._do_search("simple_search", simple_search=random.choice(simple_queries))
 

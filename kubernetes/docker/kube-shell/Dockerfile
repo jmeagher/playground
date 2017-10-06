@@ -8,6 +8,15 @@ RUN apk update \
  && apk add util-linux coreutils binutils findutils grep \
  && apk add git vim screen tmux jq
 
+RUN apk add python python-dev py2-pip gcc musl-dev \
+ && pip install requests
+
+# Install the kubectl cli so it is available in-cluster
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s \
+    https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
+    && chmod +x ./kubectl \
+    && mv ./kubectl /usr/local/bin/kubectl
+
 # Hack for a minor command my dotfiles are expecting to be there
 RUN mkdir -p /root/bin \
  && touch /root/bin/locale \
@@ -18,4 +27,4 @@ RUN git clone https://github.com/jmeagher/dotfiles.git \
 
 ENV PAGER less
 
-ENTRYPOINT ["/bin/bash", "-li"]
+CMD ["sleep", "9999h"]
