@@ -15,6 +15,7 @@ master:
   config:
     target-host: http://elastic:changeme@es-test-helm-elasticsearch:9200
     corpus-glob: /corpus/*/*.txt
+    monitoring-es-url: http://elastic:changeme@monitoring-es-svc:9200/locust
   resources:
     limits:
       cpu: 100m
@@ -24,7 +25,7 @@ master:
       memory: 128Mi
 worker:
   config:
-
+    monitoring-es-url: http://elastic:changeme@monitoring-es-svc:9200/locust/stat
     # all files from tasks folder are mounted under `/locust-tasks`
     locust-script: "/locust-tasks/tasks.py"
   replicaCount: 6

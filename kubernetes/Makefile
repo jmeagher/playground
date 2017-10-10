@@ -6,7 +6,7 @@ complete_shutdown:
 
 # ###############################################
 # The basics to get the infrastructure up and running
-infrastructure: start_monitoring_es helm_init start_shell
+infrastructure: forward_monitoring_kibana helm_init start_shell
 
 start_gke:
 	kubectl get nodes || ( \
@@ -15,13 +15,25 @@ start_gke:
 	    --zone us-central1-c \
 	    --additional-zones us-central1-b \
 	    --num-nodes 2 --machine-type n1-standard-2 \
-	    --preemptible \
 	  && gcloud container clusters get-credentials es-test )
+		# --preemptible \
 
-start_monitoring_es: start_gke
+start_monitoring_svc: start_gke
+	kubectl get svc | grep monitoring-es-svc || \
+	  kubectl create -f monitoring/monitoring-es-svc.yaml
+
+start_monitoring_es: start_monitoring_svc
 	kubectl get pods | grep monitoring-es \
 	  || (echo "Monitoring cluster is not running, starting it now" ; \
 		  kubectl create -f monitoring/monitoring-es-cluster.yaml)
+
+start_monitoring_kibana: start_monitoring_svc
+	kubectl get pod | grep monitoring-kibana || kubectl create -f monitoring/monitoring-kibana.yaml
+
+forward_monitoring_kibana: start_monitoring_kibana start_monitoring_es
+		ps ax | grep -v grep | grep 'kubectl port-forward monitoring-kibana' | cut -d' ' -f1 | xargs kill \
+		  ; kubectl port-forward $(shell kubectl get pods | \
+			   grep monitoring-kibana | cut -f 1 -d' ') 15601:5601 &
 
 helm_init: start_gke
 	kubectl get pod --all-namespaces=true | grep tiller \
@@ -50,7 +62,7 @@ check_shell: start_shell
 test_components: start_test_es forward_kibana forward_locust
 
 start_test_es: check_tiller
-	helm list | grep es-test || \
+	helm list | grep es-test | grep helm-elasticsearch || \
 	  (echo "Launching the test ES cluster" ; helm install helm-elasticsearch --name es-test)
 
 start_kibana: start_gke
@@ -62,9 +74,9 @@ check_kibana: start_kibana
 		kubectl get pod | grep es-test-kibana | grep '1/1')
 
 forward_kibana: check_kibana
-	netstat -an | grep LISTEN | grep 5601 \
-	  || kubectl port-forward $(shell kubectl get pods | \
-		   grep es-test-kibana | cut -f 1 -d' ') 5601 5601 &
+	ps ax | grep -v grep | grep 'kubectl port-forward es-test-kibana' | cut -d' ' -f1 | xargs kill \
+	  ; kubectl port-forward $(shell kubectl get pods | \
+		   grep es-test-kibana | cut -f 1 -d' ') 5601 &
 
 start_locust: check_tiller start_monitoring_es
 	helm list | grep locust || helm install -n locust-es-test locust
@@ -75,13 +87,28 @@ check_locust: start_locust
 		kubectl get pod | grep locust-es-test-master | grep '1/1')
 
 forward_locust: check_locust
-	netstat -an | grep LISTEN | grep 8089 \
-	  || kubectl port-forward $(shell kubectl get pods | \
-		   grep locust-es-test-master | cut -f 1 -d' ') 8089 8089 &
+	ps ax | grep -v grep | grep 'kubectl port-forward locust-es-test-master' | cut -d' ' -f1 | xargs kill \
+	  ; kubectl port-forward $(shell kubectl get pods | \
+		   grep locust-es-test-master | cut -f 1 -d' ') 8089 &
+
+delete_locust:
+	helm delete --purge locust-es-test && sleep 3s
+
+reload_locust: delete_locust forward_locust
 
 
 # ######################################
 # Actual test stuff
 
 locust_light_load: forward_locust
-	curl localhost:8089/swarm -X POST -F locust_count=20 -F hatch_rate=1
+	sleep 1s; curl localhost:8089/swarm -X POST -F locust_count=20 -F hatch_rate=1
+
+chaos_stop_data_node:
+	curl -s http://localhost:8089/stats/reset \
+	  && kubectl exec \
+	    $(shell kubectl get pods | grep es-test-helm-elasticsearch-data \
+	      | sort -n -k4 | head -n1 | cut -f 1 -d' ') \
+	    -- pkill -9 java \
+	  ; sleep 60s \
+	  ; curl -s http://localhost:8089/stats/requests/csv ; echo "" \
+	  ; curl -s http://localhost:8089/stats/distribution/csv
