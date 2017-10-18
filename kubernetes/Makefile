@@ -31,7 +31,7 @@ start_monitoring_kibana: start_monitoring_svc
 	kubectl get pod | grep monitoring-kibana || kubectl create -f monitoring/monitoring-kibana.yaml
 
 forward_monitoring_kibana: start_monitoring_kibana start_monitoring_es
-		ps ax | grep -v grep | grep 'kubectl port-forward monitoring-kibana' | cut -d' ' -f1 | xargs kill \
+		pkill -f 'kubectl port-forward monitoring-kibana' \
 		  ; kubectl port-forward $(shell kubectl get pods | \
 			   grep monitoring-kibana | cut -f 1 -d' ') 15601:5601 &
 
@@ -74,7 +74,7 @@ check_kibana: start_kibana
 		kubectl get pod | grep es-test-kibana | grep '1/1')
 
 forward_kibana: check_kibana
-	ps ax | grep -v grep | grep 'kubectl port-forward es-test-kibana' | cut -d' ' -f1 | xargs kill \
+	pkill -f 'kubectl port-forward es-test-kibana' \
 	  ; kubectl port-forward $(shell kubectl get pods | \
 		   grep es-test-kibana | cut -f 1 -d' ') 5601 &
 
@@ -87,7 +87,7 @@ check_locust: start_locust
 		kubectl get pod | grep locust-es-test-master | grep '1/1')
 
 forward_locust: check_locust
-	ps ax | grep -v grep | grep 'kubectl port-forward locust-es-test-master' | cut -d' ' -f1 | xargs kill \
+	pkill -f 'kubectl port-forward locust-es-test-master' \
 	  ; kubectl port-forward $(shell kubectl get pods | \
 		   grep locust-es-test-master | cut -f 1 -d' ') 8089 &
 
@@ -110,5 +110,15 @@ chaos_stop_data_node:
 	      | sort -n -k4 | head -n1 | cut -f 1 -d' ') \
 	    -- pkill -9 java \
 	  ; sleep 60s \
-	  ; curl -s http://localhost:8089/stats/requests/csv ; echo "" \
-	  ; curl -s http://localhost:8089/stats/distribution/csv
+	  ; curl -s 'http://localhost:8089/stats/requests/csv' ; echo "" \
+	  ; curl -s 'http://localhost:8089/stats/distribution/csv'
+
+chaos_stop_master_node:
+	curl -s http://localhost:8089/stats/reset \
+	  && kubectl exec \
+	    $(shell kubectl get pods | grep es-test-helm-elasticsearch-master \
+	      | sort -n -k4 | head -n1 | cut -f 1 -d' ') \
+	    -- pkill -9 java \
+	  ; sleep 60s \
+	  ; curl -s 'http://localhost:8089/stats/requests/csv' ; echo "" \
+	  ; curl -s 'http://localhost:8089/stats/distribution/csv'

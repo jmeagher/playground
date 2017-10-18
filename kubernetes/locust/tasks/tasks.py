@@ -8,7 +8,7 @@ import time
 
 from locust import HttpLocust, TaskSet, task
 
-timeout = (20, 200)
+timeout = (1, 2)
 corpus_glob = os.environ["CORPUS_GLOB"]
 all_files = glob.glob(corpus_glob)
 
@@ -27,16 +27,19 @@ def monitored(func):
     def wrapper(*arg, **kw):
         timestamp = datetime.datetime.utcnow().isoformat()
         start = time.time()
-        out = func(*arg, **kw)
+        test_error = False
+        try:
+            out = func(*arg, **kw)
+        except:
+            test_error = True
         end = time.time()
-        print "Something %s" % monitoring_es
         if monitoring_es:
-            print "Sending stats"
             requests.request('POST', monitoring_es, json={
               "timestamp": timestamp,
               "response_time": (end-start),
               "test": func.__name__,
-              "success": out[0],
+              "success": out[0] and not test_error and ((end-start) < timeout[1]),
+              "reason": out[1],
             })
         return out
     return wrapper
@@ -94,30 +97,38 @@ class MixedElasticSearchLoad(TaskSet):
 
     def _do_validation(self, response, expected_response_codes=[200]):
         successful_request = False
+        failure_reason = ""
         try:
+            response.raise_for_status()
             try:
-              out = response.json()
+                out = response.json()
             except (ValueError) as e:
-                response.failure("Didn't get json as a response, status: %s  text: %s" % (response.status_code, response.text))
+                failure_reason = "Didn't get json as a response, status: %s  text: %s" % (response.status_code, response.text)
+                response.failure(failure_reason)
             if not response.status_code in expected_response_codes:
-                response.failure("Expected response code %s but got %s instead" %
+                failure_reason = ("Expected response code %s but got %s instead" %
                   (expected_response_codes, response.status_code) )
+                response.failure(failure_reason)
             elif not "_shards" in out:
-                response.failure("No _shards information is available")
+                failure_reason = ("No _shards information is available")
+                response.failure(failure_reason)
             else:
               shards = out["_shards"]
               successful = shards.get("successful", -1)
               failed = shards.get("failed", 999)
               if successful <= 0:
-                  response.failure("Expected successful shards, but got %s instead" % str(successful) )
+                  failure_reason = ("Expected successful shards, but got %s instead" % str(successful) )
+                  response.failure(failure_reason)
               elif failed > 0:
-                  response.failure("Expected no failed shards, but got %s instead" % str(failed) )
+                  failure_reason = ("Expected no failed shards, but got %s instead" % str(failed) )
+                  response.failure(failure_reason)
               else:
                   successful_request = True
                   response.success()
         except:
-            response.failure("Unknown exception: " + str("\n".join(sys.exc_info())))
-        return (successful_request, None)
+            failure_reason = ("Unknown exception: " + str("\n".join(sys.exc_info())))
+            response.failure(failure_reason)
+        return (successful_request, failure_reason)
 
 
 class ElasticSearchUser(HttpLocust):
