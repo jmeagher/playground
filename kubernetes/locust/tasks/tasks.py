@@ -8,7 +8,7 @@ import time
 
 from locust import HttpLocust, TaskSet, task
 
-timeout = (1, 2)
+timeout = (0.5, 1.0)
 corpus_glob = os.environ["CORPUS_GLOB"]
 all_files = glob.glob(corpus_glob)
 
@@ -27,21 +27,23 @@ def monitored(func):
     def wrapper(*arg, **kw):
         timestamp = datetime.datetime.utcnow().isoformat()
         start = time.time()
-        test_error = False
+        success = False
+        reason = ""
         try:
-            out = func(*arg, **kw)
+            success, reason = func(*arg, **kw)
         except:
-            test_error = True
+            success = False
+            reason = "Something unknown in the wrapper: " + str("\n".join(sys.exc_info()))
         end = time.time()
         if monitoring_es:
             requests.request('POST', monitoring_es, json={
               "timestamp": timestamp,
               "response_time": (end-start),
               "test": func.__name__,
-              "success": out[0] and not test_error and ((end-start) < timeout[1]),
-              "reason": out[1],
+              "success": success,
+              "reason": reason,
             })
-        return out
+        return success
     return wrapper
 
 class MixedElasticSearchLoad(TaskSet):
