@@ -5,3 +5,4 @@ FROM quay.io/pires/docker-elasticsearch-kubernetes:5.6.3
 RUN NODE_NAME=tmp-for-install-only /elasticsearch/bin/elasticsearch-plugin install --batch x-pack
 RUN rm -rf /elasticsearch/plugins/x-pack/platform/linux-x86_64
 RUN echo "xpack.ml.enabled: false" >> /elasticsearch/config/elasticsearch.yml
+RUN echo "network.bind_host: \${NETWORK_BIND}" >> /elasticsearch/config/elasticsearch.yml
