@@ -15,6 +15,7 @@ start_gke:
 	    --zone us-central1-c \
 	    --additional-zones us-central1-b \
 	    --num-nodes 2 --machine-type n1-standard-2 \
+			--cluster-version 1.7.8 \
 	  && gcloud container clusters get-credentials es-test )
 		# --preemptible \
 

@@ -6,7 +6,7 @@
       "title": "Everything Dashboard",
       "hits": 0,
       "description": "",
-      "panelsJSON": "[{\"col\":1,\"id\":\"AV8D4afKHCIi6eYDrQag\",\"panelIndex\":1,\"row\":1,\"size_x\":6,\"size_y\":3,\"type\":\"visualization\"},{\"col\":7,\"id\":\"AV8D9j5iGmM6YkppJBfs\",\"panelIndex\":2,\"row\":1,\"size_x\":6,\"size_y\":3,\"type\":\"visualization\"},{\"size_x\":6,\"size_y\":3,\"panelIndex\":3,\"type\":\"visualization\",\"id\":\"AV8D9788GmM6YkppJCGt\",\"col\":1,\"row\":4}]",
+      "panelsJSON": "[{\"col\":1,\"id\":\"AV8D4afKHCIi6eYDrQag\",\"panelIndex\":1,\"row\":1,\"size_x\":6,\"size_y\":3,\"type\":\"visualization\"},{\"col\":7,\"id\":\"AV8D9j5iGmM6YkppJBfs\",\"panelIndex\":2,\"row\":4,\"size_x\":6,\"size_y\":3,\"type\":\"visualization\"},{\"col\":1,\"id\":\"AV8D9788GmM6YkppJCGt\",\"panelIndex\":3,\"row\":4,\"size_x\":6,\"size_y\":3,\"type\":\"visualization\"},{\"col\":1,\"id\":\"AV8xXUieHCIi6eYD4szg\",\"panelIndex\":4,\"row\":7,\"size_x\":6,\"size_y\":3,\"type\":\"visualization\"},{\"col\":7,\"id\":\"AV8xdClIHCIi6eYD4ynO\",\"panelIndex\":5,\"row\":1,\"size_x\":6,\"size_y\":3,\"type\":\"visualization\"}]",
       "optionsJSON": "{\"darkTheme\":false}",
       "uiStateJSON": "{}",
       "version": 1,
@@ -55,6 +55,34 @@
       "version": 1,
       "kibanaSavedObjectMeta": {
         "searchSourceJSON": "{\"index\":\"AV8D1y0eHCIi6eYDrOxO\",\"query\":{\"match_all\":{}},\"filter\":[]}"
+      }
+    }
+  },
+  {
+    "_id": "AV8xXUieHCIi6eYD4szg",
+    "_type": "visualization",
+    "_source": {
+      "title": "Success Rate SLO Graph",
+      "visState": "{\"type\":\"timelion\",\"title\":\"Success Rate SLO Graph\",\"params\":{\"expression\":\".es(q='success:true',index=locust,timefield=timestamp).label('Success Rate').divide(.es(index=locust,timefield=timestamp)),.static(0.999).label('SLO').color('#CC6666')\",\"interval\":\"auto\"}}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{}"
+      }
+    }
+  },
+  {
+    "_id": "AV8xdClIHCIi6eYD4ynO",
+    "_type": "visualization",
+    "_source": {
+      "title": "Failure Rate",
+      "visState": "{\"title\":\"Failure Rate\",\"type\":\"timelion\",\"params\":{\"expression\":\".es(q='success:false',index=locust,timefield=timestamp).label('Failure Rate').divide(.es(index=locust,timefield=timestamp)),.static(0.001).label('SLO Max')\",\"interval\":\"auto\"},\"aggs\":[],\"listeners\":{}}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"match_all\":{}},\"filter\":[]}"
       }
     }
   }

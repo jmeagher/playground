@@ -1,4 +1,4 @@
-FROM quay.io/pires/docker-elasticsearch-kubernetes:5.6.1
+FROM quay.io/pires/docker-elasticsearch-kubernetes:5.6.3
 
 # Install x-pack, but remove the ML part
 # See https://discuss.elastic.co/t/elasticsearch-failing-to-start-due-to-x-pack/85125/6

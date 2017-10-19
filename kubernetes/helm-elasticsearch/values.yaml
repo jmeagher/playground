@@ -1,7 +1,7 @@
 common:
   image:
     repository: jpmeagher/playground
-    tag: docker-elasticsearch-kubernetes-5.6.1
+    tag: docker-elasticsearch-kubernetes-5.6.3
     pullPolicy: Always
   env:
     CLUSTER_NAME: "jpm-es-testing"

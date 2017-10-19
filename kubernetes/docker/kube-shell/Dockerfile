@@ -5,11 +5,11 @@ RUN apk update \
  && apk add man man-pages mdocml-apropos less less-doc tar \
  && apk add curl curl-doc ca-certificates lynx lynx-doc \
  && apk add bash bash-doc bash-completion \
- && apk add util-linux coreutils binutils findutils grep \
+ && apk add util-linux coreutils binutils findutils grep ca-certificates wget \
  && apk add git vim screen tmux jq
 
 RUN apk add python python-dev py2-pip gcc musl-dev \
- && pip install requests
+ && pip install requests ipython
 
 # Install the kubectl cli so it is available in-cluster
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s \
