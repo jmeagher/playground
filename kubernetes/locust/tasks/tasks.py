@@ -38,6 +38,7 @@ def monitored(func):
         if monitoring_es:
             requests.request('POST', monitoring_es, json={
               "timestamp": timestamp,
+              "results_timestamp": datetime.datetime.utcnow().isoformat(),
               "response_time": (end-start),
               "test": func.__name__,
               "success": success,

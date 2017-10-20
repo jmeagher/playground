@@ -1,0 +1,14 @@
+#! /bin/bash
+PATTERN=$1
+COUNT=${2:-8}
+SEC_DELAY=${3:-10}
+CHECK=failed
+
+for i in $(seq $COUNT) ; do
+  kubectl get pod --all-namespaces=true \
+    | grep Running | grep $PATTERN | grep -v '0/[1-9]' \
+    && CHECK=pass && break \
+    || sleep $SEC_DELAY
+done
+
+[ $CHECK = pass ]

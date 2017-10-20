@@ -1,0 +1,2 @@
+#! /bin/bash
+curl -s elastic:changeme@localhost:9200/_cat/master | awk '{print $4}'

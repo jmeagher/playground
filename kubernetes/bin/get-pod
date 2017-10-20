@@ -1,0 +1,5 @@
+#! /bin/bash
+PATTERN=$1
+SORT_ARG="${2:--R}"
+kubectl get pods | grep $PATTERN \
+  | sort $SORT_ARG | head -n1 | awk '{print $1}'
