@@ -5,6 +5,7 @@ import random
 import requests
 import sys
 import time
+import traceback
 
 from locust import HttpLocust, TaskSet, task
 
@@ -33,10 +34,10 @@ def monitored(func):
             success, reason = func(*arg, **kw)
         except:
             success = False
-            reason = "Something unknown in the wrapper: " + str("\n".join(sys.exc_info()))
+            reason = "Something unknown in the wrapper: " + str(traceback.format_exc())
         end = time.time()
         if monitoring_es:
-            requests.request('POST', monitoring_es, json={
+            requests.request('POST', monitoring_es, timeout=(10,30), json={
               "timestamp": timestamp,
               "results_timestamp": datetime.datetime.utcnow().isoformat(),
               "response_time": (end-start),
@@ -129,7 +130,7 @@ class MixedElasticSearchLoad(TaskSet):
                   successful_request = True
                   response.success()
         except:
-            failure_reason = ("Unknown exception: " + str("\n".join(sys.exc_info())))
+            failure_reason = ("Unknown exception: " + str(traceback.format_exc()))
             response.failure(failure_reason)
         return (successful_request, failure_reason)
 

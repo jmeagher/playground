@@ -1,6 +1,8 @@
 
 setup: infrastructure test_components
 
+# ###############################################
+# A few other helpers
 complete_shutdown:
 	gcloud container clusters delete es-test
 
@@ -14,10 +16,9 @@ start_gke:
 	  && gcloud beta container clusters create es-test \
 	    --zone us-central1-c \
 	    --additional-zones us-central1-b \
-	    --num-nodes 2 --machine-type n1-standard-2 \
-			--cluster-version 1.7.8 \
+	    --num-nodes 2 --machine-type n1-highmem-2 \
+			--preemptible \
 	  && gcloud container clusters get-credentials es-test )
-		# --preemptible \
 
 start_monitoring_svc: start_gke
 	kubectl get svc | grep monitoring-es-svc || \
@@ -121,7 +122,7 @@ chaos_pkill_active_master_node:
 	  ; ./bin/locust-stats
 
 
-chaos_network_degredation_active_master_node:
+chaos_network_stop_active_master_node:
 	curl -s http://localhost:8089/stats/reset \
 		; sleep 60s \
 		; ./bin/locust-stats \
@@ -137,7 +138,24 @@ chaos_network_degredation_active_master_node:
 	  ; sleep 3s \
 	  ; ./bin/locust-stats
 
-chaos_network_degredation_data_node:
+chaos_network_stop_standby_master_node:
+	curl -s http://localhost:8089/stats/reset \
+		; sleep 60s \
+		; ./bin/locust-stats \
+		; curl -s http://localhost:8089/stats/reset \
+	  && kubectl exec \
+	    $(shell ./bin/standby-master) -c toxiproxy \
+	    -- /bin/sh -c \
+				'/go/bin/toxiproxy-cli toxic add -n limited -t bandwidth -a rate=1 es_transport \
+				; /go/bin/toxiproxy-cli toxic add -n latency -t latency -a latency=30000 es_transport \
+				; echo "Starting Chaos" ; sleep 240s ; echo "Ending Chaos" \
+				; /go/bin/toxiproxy-cli toxic delete -n limited es_transport \
+				; /go/bin/toxiproxy-cli toxic delete -n latency es_transport' \
+	  ; sleep 3s \
+	  ; ./bin/locust-stats
+
+
+chaos_network_stop_data_node:
 	curl -s http://localhost:8089/stats/reset \
 		; sleep 60s \
 		; ./bin/locust-stats \

@@ -1,0 +1,6 @@
+#! /bin/bash
+curl -s elastic:changeme@localhost:9200/_cat/nodes \
+  | grep ' m - ' \
+  | sort -nr -k2 \
+  | head -n1 \
+  | awk '{print $10}'

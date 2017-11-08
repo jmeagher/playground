@@ -73,3 +73,10 @@ spec:
         - emptyDir:
             medium: ""
           name: "monitoring-storage"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: "kubernetes.io/hostname"
+              labelSelector:
+                matchLabels:
+                  component: monitoring-es-cluster

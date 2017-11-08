@@ -1,5 +1,9 @@
 #! /bin/bash
+echo ""
+echo "Locust stats as of $(date)"
 curl -s "http://localhost:8089/stats/requests/csv"
 echo ""
 echo ""
 curl -s "http://localhost:8089/stats/distribution/csv"
+echo ""
+echo ""
