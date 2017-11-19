@@ -1,0 +1,7 @@
+
+POD=$1
+shift
+
+pkill -f "kubectl port-forward $POD"
+echo kubectl port-forward $(kubectl get pods | grep $POD | cut -f 1 -d' ' | head -n 1) $@
+kubectl port-forward $(kubectl get pods | grep $POD | cut -f 1 -d' ' | head -n 1) $@ &

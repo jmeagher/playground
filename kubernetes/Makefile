@@ -4,7 +4,8 @@ setup: infrastructure test_components
 # ###############################################
 # A few other helpers
 complete_shutdown:
-	gcloud container clusters delete es-test
+	gcloud container clusters delete es-test \
+	    --zone us-central1-c 
 
 # ###############################################
 # The basics to get the infrastructure up and running
@@ -33,9 +34,7 @@ start_monitoring_kibana: start_monitoring_svc
 	kubectl get pod | grep monitoring-kibana || kubectl create -f monitoring/monitoring-kibana.yaml
 
 forward_monitoring_kibana: start_monitoring_kibana start_monitoring_es
-		pkill -f 'kubectl port-forward monitoring-kibana' \
-		  ; kubectl port-forward $(shell kubectl get pods | \
-			   grep monitoring-kibana | cut -f 1 -d' ') 15601:5601 &
+	./bin/forward-port monitoring-kibana 15601:5601
 
 helm_init: start_gke
 	kubectl get pod --all-namespaces=true | grep tiller \
@@ -64,8 +63,7 @@ check_test_es: start_test_es
 	./bin/pod-running es-test-helm-elasticsearch-master 10 10
 
 forward_test_es: check_test_es
-	pkill -f 'kubectl port-forward es-test-helm-elasticsearch-client' \
-	  ; kubectl port-forward $(shell ./bin/get-pod es-test-helm-elasticsearch-client) 9200 &
+	./bin/forward-port es-test-helm-elasticsearch-client 9200
 
 start_kibana: start_gke
 	kubectl get pod | grep es-test-kibana || kubectl create -f kibana/kibana.yaml
@@ -74,9 +72,7 @@ check_kibana: start_kibana
 	./bin/pod-running es-test-kibana 10 10
 
 forward_kibana: check_kibana
-	pkill -f 'kubectl port-forward es-test-kibana' \
-	  ; kubectl port-forward $(shell kubectl get pods | \
-		   grep es-test-kibana | cut -f 1 -d' ') 5601 &
+	./bin/forward-port es-test-kibana 5601
 
 start_locust: check_tiller start_monitoring_es
 	helm list | grep locust || helm install -n locust-es-test locust
@@ -85,9 +81,7 @@ check_locust: start_locust
 	./bin/pod-running locust-es-test-master 10 10
 
 forward_locust: check_locust
-	pkill -f 'kubectl port-forward locust-es-test-master' \
-	  ; kubectl port-forward $(shell kubectl get pods | \
-		   grep locust-es-test-master | cut -f 1 -d' ') 8089 &
+	./bin/forward-port locust-es-test-master 8089
 
 delete_locust:
 	helm delete --purge locust-es-test && sleep 3s
