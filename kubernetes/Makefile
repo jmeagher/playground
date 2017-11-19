@@ -164,3 +164,13 @@ chaos_network_stop_data_node:
 				; /go/bin/toxiproxy-cli toxic delete -n latency es_transport' \
 	  ; sleep 3s \
 	  ; ./bin/locust-stats
+
+
+# ###############################################
+# Random things to help on chromebook
+forward_local_ports:
+	pkill socat || \
+	for P in 5601 15601 9200 8089 ; do \
+    socat TCP4-LISTEN:$${P},fork,bind=$(shell ifconfig arc0 | grep "inet " | cut -d" " -f10) TCP4:localhost:$${P} & \
+  done
+
