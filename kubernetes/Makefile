@@ -98,8 +98,8 @@ locust_light_load: forward_locust
 chaos_pkill_data_node:
 	curl -s http://localhost:8089/stats/reset \
 		; sleep 60s \
-		; ./bin/locust-stats \
-	  && kubectl exec \
+		; ./bin/locust-stats; curl -s http://localhost:8089/stats/reset \
+	  && kubectl exec -c es-data \
 	    $(shell ./bin/get-pod es-test-helm-elasticsearch-data -nk4) \
 	    -- pkill -9 java \
 	  ; sleep 60s \
@@ -108,8 +108,8 @@ chaos_pkill_data_node:
 chaos_pkill_active_master_node:
 	curl -s http://localhost:8089/stats/reset \
 		; sleep 60s \
-		; ./bin/locust-stats \
-	  && kubectl exec \
+		; ./bin/locust-stats; curl -s http://localhost:8089/stats/reset \
+	  && kubectl exec -c es-master \
 	    $(shell ./bin/active-master) \
 	    -- pkill -9 java \
 	  ; sleep 60s \
@@ -119,8 +119,7 @@ chaos_pkill_active_master_node:
 chaos_network_stop_active_master_node:
 	curl -s http://localhost:8089/stats/reset \
 		; sleep 60s \
-		; ./bin/locust-stats \
-		; curl -s http://localhost:8089/stats/reset \
+		; ./bin/locust-stats; curl -s http://localhost:8089/stats/reset \
 	  && kubectl exec \
 	    $(shell ./bin/active-master) -c toxiproxy \
 	    -- /bin/sh -c \
@@ -135,8 +134,7 @@ chaos_network_stop_active_master_node:
 chaos_network_stop_standby_master_node:
 	curl -s http://localhost:8089/stats/reset \
 		; sleep 60s \
-		; ./bin/locust-stats \
-		; curl -s http://localhost:8089/stats/reset \
+		; ./bin/locust-stats; curl -s http://localhost:8089/stats/reset \
 	  && kubectl exec \
 	    $(shell ./bin/standby-master) -c toxiproxy \
 	    -- /bin/sh -c \
@@ -152,8 +150,7 @@ chaos_network_stop_standby_master_node:
 chaos_network_stop_data_node:
 	curl -s http://localhost:8089/stats/reset \
 		; sleep 60s \
-		; ./bin/locust-stats \
-		; curl -s http://localhost:8089/stats/reset \
+		; ./bin/locust-stats; curl -s http://localhost:8089/stats/reset \
 	  && kubectl exec \
 	    $(shell ./bin/get-pod es-test-helm-elasticsearch-data) -c toxiproxy \
 	    -- /bin/sh -c \

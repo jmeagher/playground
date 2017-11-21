@@ -28,7 +28,7 @@ worker:
     monitoring-es-url: http://elastic:changeme@monitoring-es-svc:9200/locust/stat
     # all files from tasks folder are mounted under `/locust-tasks`
     locust-script: "/locust-tasks/tasks.py"
-  replicaCount: 6
+  replicaCount: 12
   resources:
     limits:
       cpu: 100m
