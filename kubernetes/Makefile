@@ -69,7 +69,7 @@ start_kibana: start_gke
 	kubectl get pod | grep es-test-kibana || kubectl create -f kibana/kibana.yaml
 
 check_kibana: start_kibana
-	./bin/pod-running es-test-kibana 10 10
+	./bin/pod-running es-test-kibana 20 10
 
 forward_kibana: check_kibana
 	./bin/forward-port es-test-kibana 5601
