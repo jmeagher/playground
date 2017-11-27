@@ -118,7 +118,7 @@ ElasticSearch is a great tool for capturing per-request information for the chao
 
 > This assumes everything is setup as it was done above with all the ports setup to be forwarded locally. See the Makefile for the full set of commands used. Make sure http://localhost:8089/ correctly connects to [Locust](#run-locust), http://localhost:5601/ correctly connects to [Kibana](#run-kibana), http://localhost:9200/ [ElasticSearch](#run-elastic-search), and http://localhost:15601/ correct connects to the [second monitoring ElasticSearch cluster](#run-a-second-elasticsearch-cluster).
 
-### Chaos by Hand
+### Process killing
 
 Generate a mixed load on the cluster with `curl localhost:8089/swarm -X POST -F locust_count=100 -F hatch_rate=10` (or use the Locust UI). In [Kibana](http://localhost:5601/app/monitoring) open the monitoring view and watch the overall cluster overview and the node view. Everything should be in a green state. Indexing rate should be around 100 RPS (Requests Per Second) for the primaries and 200 RPS total. Search rate should be around 50 RPS.
 
@@ -160,7 +160,7 @@ The expectation from this test is a small impact to the performance of the clust
 "None Total",5820,17,22,37,53,87,99,110,120,214
 ```
 
-Here are the stats starting just before the chaos starts and collecting for about a minute. This shows a small increase in the latency at the 50th percentile. At higher percentiles the response time goes up a lot more. The max response time is almost 4 times higher than before the chaos.
+Here are the stats starting just before the chaos starts and collecting for about a minute. This shows a small increase in the latency at the 50th percentile. At higher percentiles the response time goes up much more. The max response time is almost 4 times higher than before the chaos.
 
 ```bash
 # During chaos stats
@@ -185,7 +185,7 @@ The stats coming from Locust don't have enough detail to see what's happening he
 
 #### Stop the Active Master Node
 
-Next lets stop the active master node
+Next lets stop the active master node.
 
 ```bash
 curl -s http://localhost:8089/stats/reset \
@@ -196,6 +196,8 @@ curl -s http://localhost:8089/stats/reset \
   ; curl -s http://localhost:8089/stats/requests/csv ; echo "" \
   ; curl -s http://localhost:8089/stats/distribution/csv
 ```
+
+The expectation for this test is a minimal impact on the Locust tests. The cluster is in a steady state with no shards being created or moved during the test. The client nodes will already have the full cluster state loaded and current. Before this chaos the test results show almost the same performance as before the earlier test.
 
 ```bash
 # Pre-chaos stats
@@ -214,6 +216,7 @@ curl -s http://localhost:8089/stats/reset \
 "None Total",5709,21,30,49,63,95,100,120,180,394
 ```
 
+During this test the impact to the index requests is similar to the earlier tests. In the last test only a small number of requests failed. In this test more than 100 failures occurred. As before there is not enough detail in the Locust stats to see what is happening.
 
 ```bash
 # During chaos stats
@@ -232,4 +235,10 @@ curl -s http://localhost:8089/stats/reset \
 "None Total",5285,28,45,68,84,110,190,340,620,1416
 ```
 
+The dashboard shows a short spike where all the errors happen and an increase in latency lasting about 30 seconds. It is not clear what is driving the timing of the error or the latency.
+
 ![Dashboard](img/chaos_pkill_active_master_node.dashboard.png)
+
+Looking in detail at the test failures shows them all happening within about 4 seconds. These also only happen on the write path. Any robust client with even basic retry logic would likely succeed after a single retry and would have minimal impact from this.
+
+![Dashboard](img/chaos_pkill_active_master_node.failures.by.type.png)
