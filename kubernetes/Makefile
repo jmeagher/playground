@@ -1,3 +1,6 @@
+PRE_TEST_DELAY_SEC ?= 60
+TEST_DELAY_SEC ?= 60
+NETWORK_IMPACT_SEC ?= 240
 
 setup: infrastructure test_components
 
@@ -97,35 +100,35 @@ locust_light_load: forward_locust
 
 chaos_pkill_data_node:
 	curl -s http://localhost:8089/stats/reset \
-		; sleep 60s \
+		; sleep $(PRE_TEST_DELAY_SEC)s \
 		; ./bin/locust-stats; curl -s http://localhost:8089/stats/reset \
 	  && kubectl exec -c es-data \
 	    $(shell ./bin/get-pod es-test-helm-elasticsearch-data -nk4) \
 	    -- pkill -9 java \
-	  ; sleep 60s \
+		; sleep $(TEST_DELAY_SEC)s \
 		; ./bin/locust-stats
 
 chaos_pkill_active_master_node:
 	curl -s http://localhost:8089/stats/reset \
-		; sleep 60s \
+		; sleep $(PRE_TEST_DELAY_SEC)s \
 		; ./bin/locust-stats; curl -s http://localhost:8089/stats/reset \
 	  && kubectl exec -c es-master \
 	    $(shell ./bin/active-master) \
 	    -- pkill -9 java \
-	  ; sleep 60s \
+		; sleep $(TEST_DELAY_SEC)s \
 	  ; ./bin/locust-stats
 
 
 chaos_network_stop_active_master_node:
 	curl -s http://localhost:8089/stats/reset \
-		; sleep 60s \
+		; sleep $(PRE_TEST_DELAY_SEC)s \
 		; ./bin/locust-stats; curl -s http://localhost:8089/stats/reset \
 	  && kubectl exec \
 	    $(shell ./bin/active-master) -c toxiproxy \
 	    -- /bin/sh -c \
 				'/go/bin/toxiproxy-cli toxic add -n limited -t bandwidth -a rate=1 es_transport \
 				; /go/bin/toxiproxy-cli toxic add -n latency -t latency -a latency=30000 es_transport \
-				; echo "Starting Chaos" ; sleep 240s ; echo "Ending Chaos" \
+				; echo "Starting Chaos" ; sleep $(NETWORK_IMPACT_SEC)s ; echo "Ending Chaos" \
 				; /go/bin/toxiproxy-cli toxic delete -n limited es_transport \
 				; /go/bin/toxiproxy-cli toxic delete -n latency es_transport' \
 	  ; sleep 3s \
@@ -133,14 +136,14 @@ chaos_network_stop_active_master_node:
 
 chaos_network_stop_standby_master_node:
 	curl -s http://localhost:8089/stats/reset \
-		; sleep 60s \
+		; sleep $(PRE_TEST_DELAY_SEC)s \
 		; ./bin/locust-stats; curl -s http://localhost:8089/stats/reset \
 	  && kubectl exec \
 	    $(shell ./bin/standby-master) -c toxiproxy \
 	    -- /bin/sh -c \
 				'/go/bin/toxiproxy-cli toxic add -n limited -t bandwidth -a rate=1 es_transport \
 				; /go/bin/toxiproxy-cli toxic add -n latency -t latency -a latency=30000 es_transport \
-				; echo "Starting Chaos" ; sleep 240s ; echo "Ending Chaos" \
+				; echo "Starting Chaos" ; sleep $(NETWORK_IMPACT_SEC)s ; echo "Ending Chaos" \
 				; /go/bin/toxiproxy-cli toxic delete -n limited es_transport \
 				; /go/bin/toxiproxy-cli toxic delete -n latency es_transport' \
 	  ; sleep 3s \
@@ -149,14 +152,14 @@ chaos_network_stop_standby_master_node:
 
 chaos_network_stop_data_node:
 	curl -s http://localhost:8089/stats/reset \
-		; sleep 60s \
+		; sleep $(PRE_TEST_DELAY_SEC)s \
 		; ./bin/locust-stats; curl -s http://localhost:8089/stats/reset \
 	  && kubectl exec \
 	    $(shell ./bin/get-pod es-test-helm-elasticsearch-data) -c toxiproxy \
 	    -- /bin/sh -c \
 				'/go/bin/toxiproxy-cli toxic add -n limited -t bandwidth -a rate=1 es_transport \
 			 	; /go/bin/toxiproxy-cli toxic add -n latency -t latency -a latency=30000 es_transport \
-				; echo "Starting Chaos" ; sleep 240s ; echo "Ending Chaos" \
+				; echo "Starting Chaos" ; sleep $(NETWORK_IMPACT_SEC)s ; echo "Ending Chaos" \
 				; /go/bin/toxiproxy-cli toxic delete -n limited es_transport \
 				; /go/bin/toxiproxy-cli toxic delete -n latency es_transport' \
 	  ; sleep 3s \
