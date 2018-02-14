@@ -18,9 +18,9 @@ start_gke:
 	kubectl get nodes || ( \
 	  echo "Can't connect to cluster, starting new one, this will take a few minutes" \
 	  && gcloud beta container clusters create es-test \
-	    --zone us-central1-c \
-	    --additional-zones us-central1-b \
+	    --node-locations us-central1-c,us-central1-b \
 	    --num-nodes 2 --machine-type n1-highmem-2 \
+			--cluster-version 1.7.12-gke.1 \
 			--preemptible \
 	  && gcloud container clusters get-credentials es-test )
 
@@ -96,7 +96,7 @@ reload_locust: delete_locust forward_locust
 # Actual test stuff
 
 locust_light_load: forward_locust
-	sleep 1s; curl localhost:8089/swarm -X POST -F locust_count=20 -F hatch_rate=1
+	curl localhost:8089/swarm -X POST -F locust_count=20 -F hatch_rate=1
 
 chaos_pkill_data_node:
 	curl -s http://localhost:8089/stats/reset \
